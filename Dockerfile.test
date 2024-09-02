@@ -1,0 +1,31 @@
+FROM cm2network/steamcmd:root
+
+# Install Python and pip
+RUN apt-get update && apt-get install -y python3 python3-pip python3-venv
+
+# Create a virtual environment
+RUN python3 -m venv /opt/venv
+
+# Set environment variables
+ENV PATH="/opt/venv/bin:$PATH"
+ENV VIRTUAL_ENV="/opt/venv"
+
+# Set bash as the default shell and activate virtual environment
+SHELL ["/bin/bash", "-c"]
+RUN echo 'source /opt/venv/bin/activate' >> ~/.bashrc
+
+# Install dependencies
+RUN pip install watchdog pygrok requests beautifulsoup4 flake8 flake8-docstrings black mypy
+
+WORKDIR /app
+
+# Copy the application code
+COPY common/ ./common/
+COPY handlers/ ./handlers/
+COPY tests/ ./tests/
+
+# Activate virtual environment by default
+ENTRYPOINT ["/bin/bash", "-c", "source /opt/venv/bin/activate && exec $0 $@"]
+
+# Set the default command
+CMD ["python", "-m", "unittest", "discover", "tests", "-v"]

@@ -1,0 +1,59 @@
+services:
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: dst-server-tests
+    volumes:
+      - ./tests:/app/tests
+      - ./common:/app/common
+      - ./handlers:/app/handlers
+      - ./config/mods/dedicated_server_mods_setup.lua:/home/steam/dst-dedicated/mods/dedicated_server_mods_setup.lua
+    environment:
+      - CLUSTER_TOKEN=${CLUSTER_TOKEN}
+    command: ["python", "-m", "unittest", "discover", "tests"]
+
+  dst-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dst-server-with-monitor
+    container_name: dst-server
+    ports:
+      - "11000:11000/udp"
+      - "11003:11003/udp"
+    environment:
+      - STEAMAPPID=343050
+      - STEAMAPP=dst
+      - STEAMAPPDIR=/home/steam/dst-dedicated
+      - CLUSTER_TOKEN=${CLUSTER_TOKEN}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "dontstarve_dedicated_server_nullrenderer"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      tests:
+        condition: service_completed_successfully
+
+  devtools:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      - ./config/mods/dedicated_server_mods_setup.lua:/home/steam/dst-dedicated/mods/dedicated_server_mods_setup.lua
+      - ./config/mods/modsettings.lua:/home/steam/dst-dedicated/mods/modsettings.lua
+      - ./common:/app/common
+      - ./handlers:/app/handlers
+      - ./tests:/app/tests
+    environment:
+      - CLUSTER_TOKEN=${CLUSTER_TOKEN}
+    # Remove the command to keep the container running
+
+# To run the tests and start the server if tests pass:
+# CLUSTER_TOKEN=your_token_here docker-compose up --exit-code-from tests dst-server
+#
+# To run only the tests:
+# CLUSTER_TOKEN=your_token_here docker-compose up tests

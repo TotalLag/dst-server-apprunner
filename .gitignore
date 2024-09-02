@@ -1,0 +1,89 @@
+# Python
+*.py[cod]
+__pycache__/
+*.so
+
+# Environment
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Logs
+*.log
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Don't Starve Together server files
+config/*/backup/
+config/*/save/
+config/*/server_chat_log.txt
+config/*/server_log.txt
+config/Cluster_1/cluster_token.txt
+
+# Docker
+.dockerignore
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Project specific
+output.log
+server.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Test coverage
+.coverage
+htmlcov/
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# Rope project settings
+.ropeproject
+
+# mypy
+.mypy_cache/
+
+# Pytest
+.pytest_cache/

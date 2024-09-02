@@ -1,0 +1,39 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base"
+  ],
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true
+    },
+    {
+      "matchPackagePatterns": ["^flake8", "^black"],
+      "groupName": "linters"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "stabilityDays": 3
+    }
+  ],
+  "pip_requirements": {
+    "fileMatch": ["requirements.txt"]
+  },
+  "dockerfile": {
+    "fileMatch": ["Dockerfile", "Dockerfile.test"]
+  },
+  "docker-compose": {
+    "fileMatch": ["docker-compose.yml"]
+  },
+  "ignorePaths": [
+    "**/config/**"
+  ],
+  "labels": ["dependencies"],
+  "schedule": ["every weekend"]
+}
