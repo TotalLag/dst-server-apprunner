@@ -13,6 +13,7 @@ import re
 
 class InvalidUsernameError(ValueError):
     """Exception raised for invalid usernames."""
+
     pass
 
 

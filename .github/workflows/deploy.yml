@@ -32,6 +32,14 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
       - name: Build and push DST Server Docker image to ECR
         uses: docker/build-push-action@v4
         with:
@@ -41,18 +49,33 @@ jobs:
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/dst-server:latest
             ${{ steps.login-ecr.outputs.registry }}/dst-server:${{ github.sha }}
-          cache-from: type=inline
-          cache-to: type=inline,mode=max
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
       - name: Deploy DST Server to App Runner
         uses: awslabs/amazon-app-runner-deploy@main
+        env:
+          STEAMAPPID: 343050
+          STEAMAPP: dst
+          STEAMAPPDIR: /home/steam/dst-dedicated
+          CLUSTER_TOKEN: ${{ secrets.CLUSTER_TOKEN }}
         with:
           service: DSTServer
           image: ${{ steps.login-ecr.outputs.registry }}/dst-server:latest
-          port: 11000
+          port: 8080
           access-role-arn: ${{ secrets.AWS_ROLE_ARN }}
           region: ${{ secrets.AWS_REGION }}
-          cpu: 1
-          memory: 2
-          copy-secret-env-vars: DST_SERVER_PASSWORD
+          cpu: 2
+          memory: 4
+          copy-env-vars: |
+            STEAMAPPID
+            STEAMAPP
+            STEAMAPPDIR
+            CLUSTER_TOKEN
           instance-role-arn: ${{ secrets.INSTANCE_ROLE_ARN }}
+          start-command: 'bash -c "./entry.sh && /opt/venv/bin/python3 ./log_monitor.py && /opt/venv/bin/python3 ./health_check.py"'

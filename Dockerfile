@@ -40,6 +40,10 @@ RUN chmod +x "${HOMEDIR}/entry.sh"
 COPY --chown=steam:steam log_monitor.py "${HOMEDIR}/log_monitor.py"
 RUN chmod +x "${HOMEDIR}/log_monitor.py"
 
+# Copy the health check script into the container and set ownership to steam user
+COPY --chown=steam:steam health_check.py "${HOMEDIR}/health_check.py"
+RUN chmod +x "${HOMEDIR}/health_check.py"
+
 # Copy the common directory into the container
 COPY --chown=steam:steam common/ "${HOMEDIR}/common/"
 
@@ -83,9 +87,10 @@ COPY --chown=steam:steam "config/mods/dedicated_server_mods_setup.lua" "${STEAMA
 COPY --chown=steam:steam "config/mods/modsettings.lua" "${HOMEDIR}/.klei/DoNotStarveTogether/Cluster_1/Master/modoverrides.lua"
 COPY --chown=steam:steam "config/mods/modsettings.lua" "${HOMEDIR}/.klei/DoNotStarveTogether/Cluster_1/Caves/modoverrides.lua"
 
-# Set the entry point to run the entry.sh script and the Python log monitor script
-ENTRYPOINT ["bash", "-c", "./entry.sh & /opt/venv/bin/python3 ./log_monitor.py"]
+# Set the entry point to run the entry.sh script, the Python log monitor script, and the health check script
+ENTRYPOINT ["bash", "-c", "./entry.sh & /opt/venv/bin/python3 ./log_monitor.py & /opt/venv/bin/python3 ./health_check.py"]
 
 # Expose necessary ports
 EXPOSE 11000/udp
 EXPOSE 11003/udp
+EXPOSE 8080/tcp
