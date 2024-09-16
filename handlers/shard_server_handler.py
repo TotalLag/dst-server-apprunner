@@ -1,3 +1,10 @@
+"""
+Shard Server Handler Module
+
+This module provides functionality to handle shard server events in a Don't Starve Together (DST) dedicated server.
+It includes a ShardServerHandler class and a function to register the handler with an event registry.
+"""
+
 import logging
 from typing import List, Any
 from common.game_commands import GameCommandExecutor
@@ -13,6 +20,13 @@ SHARD_END_PATTERN = "Server registered via geo DNS"
 
 
 class ShardServerHandler:
+    """
+    Handler for shard server events in a DST dedicated server.
+
+    This class processes shard server events, sends console messages,
+    and logs information about installed mods when the server starts up.
+    """
+
     def __init__(self):
         """
         Initialize the ShardServerHandler.
@@ -21,6 +35,12 @@ class ShardServerHandler:
 
     @property
     def executor(self):
+        """
+        Lazy-loaded GameCommandExecutor instance.
+
+        Returns:
+            GameCommandExecutor: An instance of the GameCommandExecutor.
+        """
         if self._executor is None:
             self._executor = GameCommandExecutor()
         return self._executor
@@ -30,7 +50,8 @@ class ShardServerHandler:
         Process the collected log lines for the shard server event.
 
         This method is called when a complete shard server event (from start to end)
-        has been detected in the log.
+        has been detected in the log. It logs the server status, sends a console message,
+        and logs information about installed mods.
 
         Args:
             event_lines (List[str]): The list of log lines that comprise the shard server event.
@@ -52,7 +73,8 @@ def register_shard_event_handler(event_registry: Any) -> None:
     Register the shard server event handler with the event registry.
 
     This function creates a ShardServerHandler and a GroupedEventHandler,
-    then registers the appropriate patterns with the event registry.
+    then registers the appropriate patterns with the event registry to handle
+    shard server start and end events.
 
     Args:
         event_registry (Any): The event registry to register the handlers with.

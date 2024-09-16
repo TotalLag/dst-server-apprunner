@@ -1,3 +1,11 @@
+"""
+Example Unpause Event Handler Module
+
+This module serves as an example of how to create an event handler for a Don't Starve Together (DST) dedicated server.
+It demonstrates handling the "Server Unpaused" event, logging the event, and sending an in-game message.
+This example can be used as a template for creating other custom event handlers.
+"""
+
 # This handler serves as an example to show how you can get started with something as simple as unpausing.
 # It demonstrates how to create a handler that listens for specific keywords in the server log
 # and triggers actions based on these events.

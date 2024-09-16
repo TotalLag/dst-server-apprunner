@@ -1,4 +1,10 @@
-# handlers/player_join_handler.py
+"""
+Player Join Handler Module
+
+This module provides handlers for various player-related events in a Don't Starve Together (DST) dedicated server.
+It includes handlers for player join, leave, resume, and spawn events, as well as a function to register these handlers
+with the event registry.
+"""
 
 import logging
 from typing import Any
@@ -17,6 +23,9 @@ executor = GameCommandExecutor()
 def handle_player_join(line: str) -> None:
     """
     Handles the player authentication event.
+
+    This function extracts player information from the log line, validates the username,
+    updates the shared state, and sends a welcome message to the game console.
 
     Args:
         line (str): The log line containing player join information.
@@ -46,6 +55,9 @@ def handle_player_leave(line: str) -> None:
     """
     Handles the player disconnection event.
 
+    This function extracts the player ID from the log line, removes the player from
+    the shared state, and sends a leave message to the game console.
+
     Args:
         line (str): The log line containing player leave information.
     """
@@ -65,6 +77,9 @@ def handle_player_leave(line: str) -> None:
 def handle_player_resume(line: str) -> None:
     """
     Handles the player resume event.
+
+    This function retrieves the most recently authenticated player, updates their
+    status in the shared state, and sends a welcome back message to the game console.
 
     Args:
         line (str): The log line containing player resume information.
@@ -89,6 +104,10 @@ def handle_player_spawn(line: str) -> None:
     """
     Handles the player spawn event and updates their character.
 
+    This function extracts the player name and character from the log line,
+    updates the player's information in the shared state, and sends a spawn
+    notification to the game console.
+
     Args:
         line (str): The log line containing player spawn information.
     """
@@ -111,6 +130,9 @@ def handle_player_spawn(line: str) -> None:
 def register_player_join_handler(event_registry: Any) -> None:
     """
     Registers the player join, leave, resume, and spawn handlers with the event registry.
+
+    This function associates specific log patterns with their corresponding handler functions
+    in the event registry.
 
     Args:
         event_registry (Any): The event registry to register the handlers with.

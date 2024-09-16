@@ -1,3 +1,13 @@
+"""
+Player Utilities Module
+
+This module provides utility functions for extracting player information from log lines
+in a Don't Starve Together (DST) dedicated server. It uses Grok patterns to parse log lines
+and extract relevant information such as player IDs, names, and characters.
+
+The module includes functions for handling player join, leave, and spawn events.
+"""
+
 import logging
 from typing import Tuple, Optional
 from pygrok import Grok

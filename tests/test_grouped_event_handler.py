@@ -1,3 +1,11 @@
+"""
+Test Grouped Event Handler Module
+
+This module contains unit tests for the GroupedEventHandler class from the common.grouped_events module.
+It verifies that the GroupedEventHandler correctly processes a sequence of log lines and calls
+the final action with the appropriate grouped event lines.
+"""
+
 import unittest
 from unittest.mock import Mock
 import logging
@@ -10,6 +18,17 @@ logger = logging.getLogger(__name__)
 
 class TestGroupedEventHandler(unittest.TestCase):
     def test_grouped_event_handling(self):
+        """
+        Test the GroupedEventHandler's ability to process a sequence of log lines.
+
+        This test verifies that:
+        1. The GroupedEventHandler correctly identifies the start and end of an event.
+        2. It collects all lines between the start and end patterns.
+        3. It calls the final_action with the correct sequence of event lines.
+        4. The final_action is called exactly once.
+
+        The test uses a mock final_action to verify the correct behavior.
+        """
         logger.debug("Starting test_grouped_event_handling")
 
         # Mock final action

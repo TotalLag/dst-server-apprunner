@@ -1,3 +1,11 @@
+"""
+Player List Handler Module
+
+This module provides functionality to handle and process the output of the c_listallplayers() command
+in a Don't Starve Together (DST) dedicated server. It includes a PlayerListHandler class that parses
+the command output and updates the shared state with the current list of players.
+"""
+
 import logging
 from typing import List, Any
 from pygrok import Grok
@@ -12,6 +20,14 @@ PLAYER_LIST_PATTERN = (
 
 
 class PlayerListHandler:
+    """
+    Handles the processing of c_listallplayers() command output.
+
+    This class is responsible for detecting the start of a player list in the log,
+    collecting player information, and updating the shared state with the current
+    list of players.
+    """
+
     def __init__(self):
         self.waiting_for_player_list = False
         self.player_lines: List[str] = []
@@ -43,6 +59,7 @@ class PlayerListHandler:
         Prepare for processing c_listallplayers() command results.
 
         This method is called when the c_listallplayers() command is detected in the log.
+        It resets the player_lines list and sets the waiting_for_player_list flag to True.
         """
         self.waiting_for_player_list = True
         self.player_lines = []
@@ -55,7 +72,8 @@ class PlayerListHandler:
         Finalize the processing of the player list and update shared state.
 
         This method parses the collected player lines, creates Player objects,
-        and updates the shared state with the new player list.
+        and updates the shared state with the new player list. It also handles
+        any errors that occur during parsing and logs them appropriately.
         """
         for line in self.player_lines:
             match = self.grok.match(line)
