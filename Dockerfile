@@ -61,7 +61,7 @@ COPY --chown=steam:steam "config/mods/modsettings.lua" "${HOMEDIR}/.klei/DoNotSt
 COPY --chown=steam:steam "config/mods/modsettings.lua" "${HOMEDIR}/.klei/DoNotStarveTogether/Cluster_1/Caves/"
 
 # Set the entry point to run the health check script
-ENTRYPOINT ["bash", "-c", "./entry.sh & /opt/venv/bin/python3 ./log_monitor.py & /opt/venv/bin/python3 ./health_check.py"]
+ENTRYPOINT ["bash", "-c", "./entry.sh & /opt/venv/bin/python3 ./log_monitor.py --debug & /opt/venv/bin/python3 ./health_check.py"]
 
 # Expose necessary ports
 EXPOSE 11000/udp 11003/udp 8080/tcp
