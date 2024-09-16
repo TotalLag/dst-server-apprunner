@@ -49,7 +49,7 @@ jobs:
         with:
           service: DSTServer
           image: ${{ steps.login-ecr.outputs.registry }}/dst-server:latest
-          port: 10999
+          port: 11000
           access-role-arn: ${{ secrets.AWS_ROLE_ARN }}
           region: ${{ secrets.AWS_REGION }}
           cpu: 1
