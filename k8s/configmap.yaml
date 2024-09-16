@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dst-server-config
+data:
+  dedicated_server_mods_setup.lua: |
+    --There are two functions that will install mods, ServerModSetup and ServerModCollectionSetup. Put the calls to the functions in this file and they will be executed on boot.
+    --ServerModSetup takes a string of a specific mod's Workshop id. It will download and install the mod to your mod directory on boot.
+    --The Workshop id can be found at the end of the url to the mod's Workshop page.
+    --Example: http://steamcommunity.com/sharedfiles/filedetails/?id=350811795
+    --ServerModSetup("350811795")
+    --ServerModCollectionSetup takes a string of a specific mod's Workshop id. It will download all the mods in the collection and install them to the mod directory on boot.
+    --The Workshop id can be found at the end of the url to the collection's Workshop page.
+    --Example: http://steamcommunity.com/sharedfiles/filedetails/?id=379114180
+    --ServerModCollectionSetup("379114180")
+    
+    ServerModSetup("375859599") -- Health Info: No relevant description available.
+    ServerModSetup("378160973") -- Global Positions: Map sharing works again! You don't even need to be in the  A New Reign beta anymore!Code contributio...
+    ServerModSetup("374550642") -- Increased Stack size: Allows you to collect even more itemsAll stackable items can be stacked up to a configurable amount ...
+    ServerModSetup("3026138806") -- Extra Equip Slots Clean [Doom] 3.1.0: Dedicated additional Equip Slots for an Amulet, an Armor and a Backpack.Also allows you to add or re...
+    ServerModSetup("3007715893") -- 更多物品堆叠/More Items Stack: 【Introduction】  Compatible With 6.27.2024 UPDATED  Version new tree seeds stackable now, also bluepr...
+    ServerModSetup("1803285852") -- Auto Stack and Pick Up: This mod gives you MANY settings for automatically stacking or picking up newly spawned and manually...
+    ServerModSetup("501385076") -- Quick Pick: The mod removes the animation of harvest grass, sapling, berrybush and other things, which makes the...
+    ServerModSetup("1079538195") -- Moving Box: This item allows players to move structures around.You can drag an empty Moving Box over a structure...
+    ServerModSetup("569043634") -- Campfire Respawn: Allows you to respawn, when you haunt campfires.Works the same way as the Jury-Rigged Portal.Affects...
+    ServerModSetup("3232213331") -- Automatic sorter DST (2024): Fixed version of "Automatic sorter" mod.Fixed a few issues that were described in the comments of th...
+
+  modsettings.lua: |
+    # This is a placeholder for modsettings.lua content
+    # Replace this with the actual content of your modsettings.lua file
+
+  cluster.ini: |
+    # This is a placeholder for cluster.ini content
+    # Replace this with the actual content of your cluster.ini file
+
+  server.ini: |
+    # This is a placeholder for server.ini content
+    # Replace this with the actual content of your server.ini file

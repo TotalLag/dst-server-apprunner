@@ -1,4 +1,4 @@
-name: Deploy DST Server
+name: Deploy DST Server to KubeVirt
 
 on:
   push:
@@ -8,6 +8,9 @@ on:
 permissions:
   id-token: write  # Required for GitHub OIDC
   contents: read   # Required for actions/checkout
+
+env:
+  KUBEVIRT_VERSION: v0.54.0
 
 jobs:
   deploy-dst-server:
@@ -32,14 +35,6 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
       - name: Build and push DST Server Docker image to ECR
         uses: docker/build-push-action@v4
         with:
@@ -49,32 +44,99 @@ jobs:
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/dst-server:latest
             ${{ steps.login-ecr.outputs.registry }}/dst-server:${{ github.sha }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      - name: Move cache
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-
-      - name: Deploy DST Server to App Runner
-        uses: awslabs/amazon-app-runner-deploy@main
-        env:
-          STEAMAPPID: 343050
-          STEAMAPP: dst
-          STEAMAPPDIR: /home/steam/dst-dedicated
-          CLUSTER_TOKEN: ${{ secrets.CLUSTER_TOKEN }}
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
         with:
-          service: DSTServer
-          image: ${{ steps.login-ecr.outputs.registry }}/dst-server:latest
-          port: 8080
-          access-role-arn: ${{ secrets.AWS_ROLE_ARN }}
-          region: ${{ secrets.AWS_REGION }}
-          cpu: 2
-          memory: 4
-          copy-env-vars: |
-            STEAMAPPID
-            STEAMAPP
-            STEAMAPPDIR
-            CLUSTER_TOKEN
-          instance-role-arn: ${{ secrets.INSTANCE_ROLE_ARN }}
+          version: 'v1.25.0'
+
+      - name: Configure kubectl
+        run: |
+          aws eks get-token --cluster-name ${{ secrets.EKS_CLUSTER_NAME }} | kubectl apply -f -
+
+      - name: Install KubeVirt CLI (virtctl)
+        run: |
+          wget -O virtctl https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_VERSION}/virtctl-${KUBEVIRT_VERSION}-linux-amd64
+          chmod +x virtctl
+          sudo mv virtctl /usr/local/bin
+
+      - name: Deploy KubeVirt
+        run: |
+          kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_VERSION}/kubevirt-operator.yaml
+          kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_VERSION}/kubevirt-cr.yaml
+          kubectl -n kubevirt wait kv kubevirt --for condition=Available --timeout=300s
+
+      - name: Create VirtualMachine resource
+        run: |
+          cat <<EOF | kubectl apply -f -
+          apiVersion: kubevirt.io/v1
+          kind: VirtualMachine
+          metadata:
+            name: dst-server-vm
+          spec:
+            running: true
+            template:
+              metadata:
+                labels:
+                  kubevirt.io/domain: dst-server-vm
+              spec:
+                domain:
+                  devices:
+                    disks:
+                    - disk:
+                        bus: virtio
+                      name: containerdisk
+                    - disk:
+                        bus: virtio
+                      name: cloudinitdisk
+                  resources:
+                    requests:
+                      memory: 2Gi
+                      cpu: 2
+                volumes:
+                - containerDisk:
+                    image: ${{ steps.login-ecr.outputs.registry }}/dst-server:${{ github.sha }}
+                  name: containerdisk
+                - cloudInitNoCloud:
+                    userData: |
+                      #cloud-config
+                      runcmd:
+                        - ["/bin/sh", "-c", "/home/steam/entry.sh"]
+                  name: cloudinitdisk
+          EOF
+
+      - name: Create Kubernetes secret for cluster token
+        run: |
+          kubectl create secret generic dst-secrets --from-literal=cluster-token=${{ secrets.CLUSTER_TOKEN }} --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -f k8s/
+
+      - name: Wait for VirtualMachine to be ready
+        run: |
+          kubectl wait --for=condition=Ready vm/dst-server-vm --timeout=300s
+
+      - name: Start VirtualMachine
+        run: |
+          virtctl start vm dst-server-vm
+
+      - name: Wait for VirtualMachineInstance to be running
+        run: |
+          kubectl wait --for=condition=Ready vmi/dst-server-vm --timeout=300s
+
+      - name: Print service information
+        run: |
+          kubectl get services -o wide
+
+      - name: Get VirtualMachineInstance IP
+        run: |
+          VM_IP=$(kubectl get vmi dst-server-vm -o jsonpath='{.status.interfaces[0].ipAddress}')
+          echo "DST Server VM IP: $VM_IP"
+
+      - name: Test DST Server connection
+        run: |
+          VM_IP=$(kubectl get vmi dst-server-vm -o jsonpath='{.status.interfaces[0].ipAddress}')
+          nc -vz $VM_IP 11000 && echo "DST Server is accessible" || echo "Failed to connect to DST Server"

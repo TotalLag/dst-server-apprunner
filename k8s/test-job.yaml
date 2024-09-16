@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: dst-server-tests
+spec:
+  template:
+    spec:
+      containers:
+      - name: tests
+        image: dst-server-tests:latest
+        imagePullPolicy: IfNotPresent
+        command: ["python", "-m", "unittest", "discover", "tests"]
+        env:
+        - name: CLUSTER_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: dst-secrets
+              key: cluster-token
+        volumeMounts:
+        - name: tests
+          mountPath: /app/tests
+        - name: common
+          mountPath: /app/common
+        - name: handlers
+          mountPath: /app/handlers
+        - name: mods-config
+          mountPath: /home/steam/dst-dedicated/mods/dedicated_server_mods_setup.lua
+          subPath: dedicated_server_mods_setup.lua
+      restartPolicy: Never
+      volumes:
+      - name: tests
+        emptyDir: {}
+      - name: common
+        emptyDir: {}
+      - name: handlers
+        emptyDir: {}
+      - name: mods-config
+        configMap:
+          name: dst-server-config
+  backoffLimit: 1

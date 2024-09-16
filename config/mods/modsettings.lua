@@ -14,7 +14,7 @@
 -- Use "DisableLocalModWarning()" to make the game stop warning you when enabling local mods.
 --DisableLocalModWarning()
 
-return {  
+return {
   ["workshop-375859599"] = { enabled = true }, -- Health Info
   ["workshop-378160973"] = { enabled = true }, -- Global Positions
   ["workshop-374550642"] = { enabled = true }, -- Increased Stack size

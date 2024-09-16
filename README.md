@@ -1,6 +1,6 @@
-# Don't Starve Together Server AppRunner
+# Don't Starve Together Server on Kubernetes with KubeVirt
 
-This project provides a Python-based application for managing and monitoring a Don't Starve Together (DST) dedicated server. It offers real-time log monitoring, event handling, player management capabilities, and mod management.
+This project provides a Python-based application for managing and monitoring a Don't Starve Together (DST) dedicated server, deployed on Kubernetes using KubeVirt for virtualization and Karpenter for managing spot instances.
 
 ## Features
 
@@ -8,28 +8,59 @@ This project provides a Python-based application for managing and monitoring a D
 - Player management (join, leave, resume, spawn)
 - Shared state management for consistent player information
 - Modular event handler system
-- Docker support for easy deployment
+- Kubernetes deployment with KubeVirt for virtualization
+- Karpenter for spot instance management
+- Docker support for containerization
 - Code linting and formatting with Flake8 and Black
 - Static type checking with mypy
 - Unit testing with Python's unittest framework
 - Automatic server startup only after successful test execution
 - Mod management system
+- Live migration support through KubeVirt
 
 ## Setup and Configuration
 
-1. Ensure you have Docker and Docker Compose installed on your system.
+1. Ensure you have the following tools installed:
+   - Docker
+   - kubectl
+   - AWS CLI (configured with appropriate credentials)
 2. Clone this repository to your local machine.
 3. Configure your DST server settings in the `config/Cluster_1/` directory.
-4. Set up your cluster token:
-   - For local testing, create a `.env` file in the project root with the following content:
-     ```
-     CLUSTER_TOKEN="your_cluster_token_here"
-     ```
-   - Replace `your_cluster_token_here` with your actual Don't Starve Together cluster token.
+4. Set up your cluster token as a Kubernetes secret (this will be done automatically by the GitHub Actions workflow).
+
+## Deployment
+
+This project uses GitHub Actions for automated deployment to a Kubernetes cluster with KubeVirt. The workflow is defined in `.github/workflows/deploy.yml`.
+
+To set up deployment:
+
+1. Go to your GitHub repository's Settings > Secrets and variables > Actions.
+2. Add the following secrets:
+   - `CLUSTER_TOKEN`: Your Don't Starve Together cluster token
+   - `AWS_ROLE_ARN`: The ARN of the IAM role to assume for AWS operations
+   - `AWS_REGION`: Your AWS region
+   - `EKS_CLUSTER_NAME`: Your EKS cluster name
+
+The GitHub Actions workflow will:
+- Build and push the Docker image to Amazon Elastic Container Registry (ECR)
+- Apply the Kubernetes manifests
+- Deploy KubeVirt to the cluster
+- Create a VirtualMachine resource for the DST server
+- Deploy the DST server as a VirtualMachine on your EKS cluster
+
+### KubeVirt Deployment
+
+This project uses KubeVirt to deploy the DST server as a virtual machine on Kubernetes. This allows for live migration between nodes without stopping the process or losing any memory state. The `deploy.yml` workflow file handles the deployment process, including:
+
+1. Installing KubeVirt on the cluster
+2. Creating a VirtualMachine resource with the DST server image
+3. Deploying the VirtualMachine to the cluster
+
+The VirtualMachine resource is configured to use the container image built from this project as the root disk, allowing for seamless updates and rollbacks.
 
 ## Using the Makefile
 
-The project includes a Makefile with various commands to simplify development and deployment. Here are the available commands:
+The project includes a Makefile with various commands to simplify development. Here are the available commands:
 
 ```bash
 # Build Docker images
@@ -47,12 +78,6 @@ make format
 # Run static type checker (mypy) in Docker
 make typecheck
 
-# Run tests and start server if tests pass
-make run
-
-# Clean up Docker resources
-make clean
-
 # Run all checks (linting, type checking, and tests)
 make check
 
@@ -68,28 +93,29 @@ make list-mods
 
 ## Mod Management
 
-The project now includes a mod management system. You can add, remove, and list mods using the Makefile commands:
+The project includes a mod management system. You can add, remove, and list mods using the Makefile commands:
 
 - To add a mod: `make add-mod <mod_id>`
 - To remove a mod: `make remove-mod <mod_id>`
 - To list all mods: `make list-mods`
 
-These commands will update the `dedicated_server_mods_setup.lua` and `modsettings.lua` file accordingly.
+These commands will update the `dedicated_server_mods_setup.lua` and `modsettings.lua` files accordingly.
 
-## GitHub Actions Deployment
+## Kubernetes and KubeVirt Configuration
 
-To deploy using GitHub Actions:
+The project uses the following Kubernetes resources:
 
-1. Go to your GitHub repository's Settings > Secrets and variables > Actions.
-2. Add a new repository secret named `CLUSTER_TOKEN` with your Don't Starve Together cluster token as the value.
+- VirtualMachine: Manages the DST server as a virtual machine
+- Service: Exposes the DST server ports
+- ConfigMap: Stores configuration files
+- PersistentVolumeClaim: Provides persistent storage for game data
 
-## AWS App Runner Considerations
+The Kubernetes manifests are located in the `k8s/` directory:
 
-This project is configured to be compatible with AWS App Runner. However, there are some important considerations:
-
-1. Persistent Storage: AWS App Runner does not support persistent volumes. As a result, game state will be lost when the container restarts or is replaced.
-
-2. Data Backup: To mitigate the lack of persistent storage, consider implementing a backup solution that periodically saves game state to an external service like Amazon S3.
+- `deployment.yaml`: Defines the DST server deployment (now replaced by VirtualMachine)
+- `service.yaml`: Exposes the DST server ports
+- `configmap.yaml`: Contains configuration files for the DST server
+- `persistent-volume-claim.yaml`: Defines the persistent storage for game data
 
 ## TODO List
 
@@ -97,6 +123,9 @@ The following items are planned improvements for this project:
 
 - [ ] Implement backup of game state and restore to/from Amazon S3
 - [x] Add support for mod management and updates
+- [ ] Implement auto-scaling based on player count
+- [ ] Add monitoring and alerting for server health
+- [x] Implement KubeVirt deployment for live migration support
 
 ## Key Components
 

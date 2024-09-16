@@ -21,7 +21,7 @@ RUN set -x && \
         less \
         procps && \
     python3 -m venv "/opt/venv" && \
-    "/opt/venv/bin/pip" install watchdog pygrok && \
+    "/opt/venv/bin/pip" install watchdog pygrok requests beautifulsoup4 && \
     apt-get clean && \
     rm -rf "/var/lib/apt/lists/*" "/tmp/*" "/var/tmp/*" && \
     bash "${STEAMCMDDIR}/steamcmd.sh" \
@@ -34,12 +34,12 @@ RUN set -x && \
     chmod -R 755 "${STEAMAPPDIR}"
 
 # Copy scripts and set permissions
-COPY --chown=steam:steam "entry.sh" "log_monitor.py" "health_check.py" "${HOMEDIR}/"
+COPY --chown=steam:steam ["entry.sh", "log_monitor.py", "health_check.py", "${HOMEDIR}/"]
 RUN chmod +x "${HOMEDIR}/entry.sh" "${HOMEDIR}/log_monitor.py" "${HOMEDIR}/health_check.py"
 
 # Copy directories
-COPY --chown=steam:steam "common/" "${HOMEDIR}/common/"
-COPY --chown=steam:steam "handlers/" "${HOMEDIR}/handlers/"
+COPY --chown=steam:steam common/ "${HOMEDIR}/common/"
+COPY --chown=steam:steam handlers/ "${HOMEDIR}/handlers/"
 
 # Switch to the non-root user 'steam'
 USER steam
@@ -51,14 +51,14 @@ WORKDIR ${HOMEDIR}
 RUN mkdir -p "${HOMEDIR}/.klei/DoNotStarveTogether/Cluster_1/Master" \
              "${HOMEDIR}/.klei/DoNotStarveTogether/Cluster_1/Caves"
 
-COPY --chown=steam:steam "config/Cluster_1/Overworld/server.ini" "config/Cluster_1/Overworld/worldgenoverride.lua" "config/Cluster_1/Overworld/leveldataoverride.lua" "${HOMEDIR}/.klei/DoNotStarveTogether/Cluster_1/Master/"
-COPY --chown=steam:steam "config/Cluster_1/Caves/server.ini" "config/Cluster_1/Caves/worldgenoverride.lua" "${HOMEDIR}/.klei/DoNotStarveTogether/Cluster_1/Caves/"
-COPY --chown=steam:steam "config/Cluster_1/adminlist.txt" "config/Cluster_1/blocklist.txt" "config/Cluster_1/whitelist.txt" "config/Cluster_1/cluster.ini" "${HOMEDIR}/.klei/DoNotStarveTogether/Cluster_1/"
+COPY --chown=steam:steam ["config/Cluster_1/Overworld/server.ini", "config/Cluster_1/Overworld/worldgenoverride.lua", "config/Cluster_1/Overworld/leveldataoverride.lua", "${HOMEDIR}/.klei/DoNotStarveTogether/Cluster_1/Master/"]
+COPY --chown=steam:steam ["config/Cluster_1/Caves/server.ini", "config/Cluster_1/Caves/worldgenoverride.lua", "${HOMEDIR}/.klei/DoNotStarveTogether/Cluster_1/Caves/"]
+COPY --chown=steam:steam ["config/Cluster_1/adminlist.txt", "config/Cluster_1/blocklist.txt", "config/Cluster_1/whitelist.txt", "config/Cluster_1/cluster.ini", "${HOMEDIR}/.klei/DoNotStarveTogether/Cluster_1/"]
 
 # Copy mod files
-COPY --chown=steam:steam "config/mods/dedicated_server_mods_setup.lua" "${STEAMAPPDIR}/mods/"
-COPY --chown=steam:steam "config/mods/modsettings.lua" "${HOMEDIR}/.klei/DoNotStarveTogether/Cluster_1/Master/"
-COPY --chown=steam:steam "config/mods/modsettings.lua" "${HOMEDIR}/.klei/DoNotStarveTogether/Cluster_1/Caves/"
+COPY --chown=steam:steam config/mods/dedicated_server_mods_setup.lua "${STEAMAPPDIR}/mods/"
+COPY --chown=steam:steam config/mods/modsettings.lua "${HOMEDIR}/.klei/DoNotStarveTogether/Cluster_1/Master/"
+COPY --chown=steam:steam config/mods/modsettings.lua "${HOMEDIR}/.klei/DoNotStarveTogether/Cluster_1/Caves/"
 
 # Set the entry point to run the health check script
 ENTRYPOINT ["bash", "-c", "./entry.sh & /opt/venv/bin/python3 ./log_monitor.py --debug & /opt/venv/bin/python3 ./health_check.py"]
